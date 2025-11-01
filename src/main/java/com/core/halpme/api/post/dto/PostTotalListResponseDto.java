@@ -1,7 +1,6 @@
 package com.core.halpme.api.post.dto;
 
 import com.core.halpme.api.members.dto.AddressDto;
-import com.core.halpme.api.members.entity.Address;
 import com.core.halpme.api.post.entity.Post;
 import com.core.halpme.api.post.entity.PostStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -11,6 +10,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -19,7 +19,10 @@ import java.time.format.DateTimeFormatter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PostTotalListResponseDto {
+public class PostTotalListResponseDto implements Serializable {
+
+
+    private static final long serialVersionUID = 1L;
 
     private Long postId;
     private String title;

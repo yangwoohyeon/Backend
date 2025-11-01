@@ -134,6 +134,7 @@ public class PostController {
         return ApiResponse.success(SuccessStatus.ARTICLE_GET_SUCCESS, posts);
     }
 
+
     @Operation(
             summary = "봉사 신청글 혹은 참여글 상세 조회",
             description = "특정 봉사 신청글 혹은 참여글의 상세 정보를 조회합니다."
@@ -203,5 +204,11 @@ public class PostController {
         postService.deletePost(postId, email);
 
         return ApiResponse.successOnly(SuccessStatus.ARTICLE_DELETE_SUCCESS);
+    }
+
+    @PostMapping("/dummy")
+    public ResponseEntity<ApiResponse<Void>> createDummyPosts() {
+        postService.createDummyPosts();
+        return ApiResponse.successOnly(SuccessStatus.ARTICLE_CREATE_SUCCESS);
     }
 }

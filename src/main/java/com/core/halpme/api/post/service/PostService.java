@@ -14,11 +14,16 @@ import com.core.halpme.common.exception.NotFoundException;
 import com.core.halpme.common.exception.UnauthorizedException;
 import com.core.halpme.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.stream.IntStream;
 
 
 @Service
@@ -31,6 +36,7 @@ public class PostService {
 
     // 봉사 신청글 생성
     @Transactional
+    @CacheEvict(value = "postsCache", key = "'allPosts'")
     public void createPost(String email, PostCreateRequestDto request) throws NotFoundException, UnauthorizedException {
 
         Member member = memberRepository.findByEmail(email)
@@ -117,6 +123,7 @@ public class PostService {
     }
 
     // 전체 봉사 신청글 조회
+    @Cacheable(value = "postsCache", key = "'allPosts'")
     public List<PostTotalListResponseDto> getTotalPostList() {
 
         List<Post> posts = postRepository.findAll();
@@ -141,6 +148,7 @@ public class PostService {
 
     // 봉사 신청글 수정
     @Transactional
+    @CacheEvict(value = "postsCache", key = "'allPosts'")
     public void updatePost(Long postId, String email, PostCreateRequestDto request) {
 
         Post post = postRepository.findById(postId)
@@ -159,6 +167,7 @@ public class PostService {
 
     // 봉사 신청글 삭제
     @Transactional
+    //@CacheEvict(value = "postsCache", key = "'allPosts'")
     public void deletePost(Long postId, String email) {
 
         Post post = postRepository.findById(postId)
@@ -169,5 +178,28 @@ public class PostService {
         }
 
         postRepository.delete(post);
+    }
+
+    @Transactional
+    @CacheEvict(value = "postsCache", key = "'allPosts'")
+    public void createDummyPosts() {
+        // 더미 작성자 찾기 또는 생성 (없으면 예외 대신 생성하거나 처리)
+        Member member = memberRepository.findByEmail("dummy@halpme.com")
+                .orElseThrow(() -> new RuntimeException("더미 회원이 없습니다."));
+
+        IntStream.rangeClosed(1, 500).forEach(i -> {
+            Post post = Post.builder()
+                    .title("더미 게시글 제목 " + i)
+                    .content("더미 게시글 내용 " + i)
+                    .requestDate(LocalDate.now())
+                    .startHour(LocalTime.of(9, 0))
+                    .endHour(LocalTime.of(12, 0))
+                    .postStatus(PostStatus.WAITING)
+                    .address(new Address("12345", "서울시", "상세주소" + i, "찾아오시는길" + i))
+                    .member(member)
+                    .build();
+
+            postRepository.save(post);
+        });
     }
 }
