@@ -60,24 +60,18 @@ public class ChatMessageController {
         ChatMessage saved = chatMessageService.createChatMessage(message);
         // 상대방 이메일 조회
         String roomId = message.getRoomId();
-        String opponentEmail = chatRoomService.getChatOpponentInfo(roomId, senderEmail).getOpponentEmail();
 
-        // 상대방이 해당 메시지를 읽었는지 확인
-        boolean isRead = messageReadStatusRepository
-                .findByMessageIdAndReaderEmail(saved.getId(), opponentEmail)
-                .map(MessageReadStatus::isRead)
-                .orElse(false);
 
-        messagingTemplate.convertAndSend(
+        messagingTemplate.convertAndSend( //이 채팅방을 구독중인 사용자에게 메시지 전송
                 "/sub/channel/" + roomId,
-                ChatMessageDto.fromEntity(saved, isRead)
+                ChatMessageDto.fromEntity(saved, false)
         );
     }
 
 
 
 
-    @MessageMapping("/read")
+    @MessageMapping("/read") //채팅방 내에서 메시지가 도착했을때 호출
     public void markAsRead(@Payload Long messageId, Message<?> rawMessage) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(rawMessage);
         Principal principal = accessor.getUser();
@@ -118,7 +112,7 @@ public class ChatMessageController {
         }
         messageReadStatusRepository.saveAll(unreadStatuses);
 
-        messagingTemplate.convertAndSend(
+        messagingTemplate.convertAndSend( //읽음 상태 전송
                 "/sub/channel/" + roomId + "/read-status",
                 new ReadStatusMessage(readerEmail, unreadStatuses.stream()
                         .map(status -> status.getMessage().getId())
@@ -128,7 +122,7 @@ public class ChatMessageController {
         log.info("총 {}개의 메시지를 읽음 처리했습니다.", unreadStatuses.size());
     }
 
-    @MessageMapping("/read-room")
+    @MessageMapping("/read-room") //채팅방 입장 시점에 호출하여 모든 메시지 읽음 처리
     public void markRoomAsRead(@Payload String roomId, Message<?> rawMessage) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(rawMessage);
         Principal principal = accessor.getUser();
@@ -150,7 +144,7 @@ public class ChatMessageController {
 
         String readerEmail = principal.getName();
 
-        // 안 읽은 메시지 중 가장 마지막 메시지 ID 찾기
+        // 해당 채팅룸에 속한 메시지 중 자신이 안읽은 메시지를 추출
         List<MessageReadStatus> unreadList =
                 messageReadStatusRepository.findAllUnreadByReaderEmailAndRoomId(readerEmail, roomId);
 
@@ -159,6 +153,7 @@ public class ChatMessageController {
             return;
         }
 
+        //안읽은 메시지 모두 읽음 처리
         for (MessageReadStatus status : unreadList) {
             status.setRead(true);
         }

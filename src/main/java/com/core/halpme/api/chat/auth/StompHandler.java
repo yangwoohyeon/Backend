@@ -23,7 +23,7 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class StompHandler implements ChannelInterceptor {
+public class StompHandler implements ChannelInterceptor { //ChannelInterceptor를 이용해 STOMP 메시지를 가로쳄
 
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -31,7 +31,7 @@ public class StompHandler implements ChannelInterceptor {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
-        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+        if (StompCommand.CONNECT.equals(accessor.getCommand())) { //첫 연결할때 CONNECT 프레임 전송 시 JWT 토큰 유효성 검사
             String authHeader = accessor.getFirstNativeHeader("Authorization");
             log.info("WebSocket connect Authorization header: {}", authHeader);
 
