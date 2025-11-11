@@ -123,7 +123,7 @@ public class PostService {
     }
 
     // 전체 봉사 신청글 조회
-    @Cacheable(value = "postsCache", key = "'allPosts'")
+    //@Cacheable(value = "postsCache", key = "'allPosts'")
     public List<PostTotalListResponseDto> getTotalPostList() {
 
         List<Post> posts = postRepository.findAll();
@@ -167,7 +167,7 @@ public class PostService {
 
     // 봉사 신청글 삭제
     @Transactional
-    //@CacheEvict(value = "postsCache", key = "'allPosts'")
+    @CacheEvict(value = "postsCache", key = "'allPosts'")
     public void deletePost(Long postId, String email) {
 
         Post post = postRepository.findById(postId)
